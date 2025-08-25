@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,10 +9,17 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface FamilyMember {
+  id: string;
+  name_bangla: string;
+  name_english?: string;
+}
+
 const AddMember = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [existingMembers, setExistingMembers] = useState<FamilyMember[]>([]);
   const [formData, setFormData] = useState({
     name_bangla: '',
     name_english: '',
@@ -23,8 +30,28 @@ const AddMember = () => {
     email: '',
     profession: '',
     current_address: '',
-    permanent_address: ''
+    permanent_address: '',
+    father_id: '',
+    mother_id: ''
   });
+
+  useEffect(() => {
+    fetchExistingMembers();
+  }, []);
+
+  const fetchExistingMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('family_members')
+        .select('id, name_bangla, name_english')
+        .order('name_bangla');
+
+      if (error) throw error;
+      setExistingMembers(data || []);
+    } catch (error) {
+      console.error('Error fetching existing members:', error);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -58,6 +85,8 @@ const AddMember = () => {
           birth_date: formData.birth_date || null,
           gender: formData.gender || null,
           blood_group: formData.blood_group || null,
+          father_id: formData.father_id || null,
+          mother_id: formData.mother_id || null,
           user_id: user.id
         }]);
 
@@ -185,6 +214,38 @@ const AddMember = () => {
                   onChange={(e) => handleInputChange('profession', e.target.value)}
                   placeholder="পেশা"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="father_id">পিতা</Label>
+                <Select value={formData.father_id} onValueChange={(value) => handleInputChange('father_id', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="পিতা নির্বাচন করুন" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {existingMembers.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name_bangla} {member.name_english && `(${member.name_english})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mother_id">মাতা</Label>
+                <Select value={formData.mother_id} onValueChange={(value) => handleInputChange('mother_id', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="মাতা নির্বাচন করুন" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {existingMembers.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name_bangla} {member.name_english && `(${member.name_english})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

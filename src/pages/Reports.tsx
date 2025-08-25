@@ -14,17 +14,33 @@ interface FamilyMember {
   mobile: string;
   email: string;
   profession: string;
+  father_id?: string;
+  mother_id?: string;
+}
+
+interface FamilyRelationship {
+  member: FamilyMember;
+  father?: FamilyMember;
+  mother?: FamilyMember;
+  children: FamilyMember[];
 }
 
 const Reports = () => {
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [birthdayMembers, setBirthdayMembers] = useState<FamilyMember[]>([]);
+  const [familyRelationships, setFamilyRelationships] = useState<FamilyRelationship[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchMembers();
   }, []);
+
+  useEffect(() => {
+    if (members.length > 0) {
+      generateFamilyRelationships();
+    }
+  }, [members]);
 
   useEffect(() => {
     if (selectedMonth) {
@@ -44,6 +60,26 @@ const Reports = () => {
     } catch (error) {
       console.error('Error fetching members:', error);
     }
+  };
+
+  const generateFamilyRelationships = () => {
+    const relationships: FamilyRelationship[] = [];
+    const memberMap = new Map(members.map(m => [m.id, m]));
+
+    members.forEach(member => {
+      const father = member.father_id ? memberMap.get(member.father_id) : undefined;
+      const mother = member.mother_id ? memberMap.get(member.mother_id) : undefined;
+      const children = members.filter(m => m.father_id === member.id || m.mother_id === member.id);
+
+      relationships.push({
+        member,
+        father,
+        mother,
+        children
+      });
+    });
+
+    setFamilyRelationships(relationships);
   };
 
   const filterBirthdayMembers = () => {
@@ -232,6 +268,71 @@ const Reports = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Family Relationships Report */}
+      <Card>
+        <CardHeader>
+          <CardTitle>পারিবারিক সম্পর্ক</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {familyRelationships.map((relationship) => (
+              <div key={relationship.member.id} className="border rounded-lg p-4">
+                <div className="font-semibold text-lg mb-3">
+                  {relationship.member.name_bangla}
+                  {relationship.member.name_english && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      ({relationship.member.name_english})
+                    </span>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <strong>পিতা:</strong>{' '}
+                    {relationship.father ? (
+                      <span>
+                        {relationship.father.name_bangla}
+                        {relationship.father.name_english && ` (${relationship.father.name_english})`}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">উল্লেখ নেই</span>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <strong>মাতা:</strong>{' '}
+                    {relationship.mother ? (
+                      <span>
+                        {relationship.mother.name_bangla}
+                        {relationship.mother.name_english && ` (${relationship.mother.name_english})`}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">উল্লেখ নেই</span>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <strong>সন্তান:</strong>{' '}
+                    {relationship.children.length > 0 ? (
+                      <div className="space-y-1">
+                        {relationship.children.map((child) => (
+                          <div key={child.id}>
+                            {child.name_bangla}
+                            {child.name_english && ` (${child.name_english})`}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">নেই</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* All Members Report */}
       <Card>
