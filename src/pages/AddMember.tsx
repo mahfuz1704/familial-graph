@@ -13,6 +13,7 @@ interface FamilyMember {
   id: string;
   name_bangla: string;
   name_english?: string;
+  gender?: string;
 }
 
 const AddMember = () => {
@@ -43,7 +44,7 @@ const AddMember = () => {
     try {
       const { data, error } = await supabase
         .from('family_members')
-        .select('id, name_bangla, name_english')
+        .select('id, name_bangla, name_english, gender')
         .order('name_bangla');
 
       if (error) throw error;
@@ -223,11 +224,13 @@ const AddMember = () => {
                     <SelectValue placeholder="পিতা নির্বাচন করুন" />
                   </SelectTrigger>
                   <SelectContent>
-                    {existingMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name_bangla} {member.name_english && `(${member.name_english})`}
-                      </SelectItem>
-                    ))}
+                    {existingMembers
+                      .filter(member => member.gender === 'male')
+                      .map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name_bangla} {member.name_english && `(${member.name_english})`}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -239,11 +242,13 @@ const AddMember = () => {
                     <SelectValue placeholder="মাতা নির্বাচন করুন" />
                   </SelectTrigger>
                   <SelectContent>
-                    {existingMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name_bangla} {member.name_english && `(${member.name_english})`}
-                      </SelectItem>
-                    ))}
+                    {existingMembers
+                      .filter(member => member.gender === 'female')
+                      .map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name_bangla} {member.name_english && `(${member.name_english})`}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
