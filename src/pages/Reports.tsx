@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar, Users, FileBarChart, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -334,41 +335,59 @@ const Reports = () => {
         </CardContent>
       </Card>
 
-      {/* All Members Report */}
+      {/* All Members with Relationships Report */}
       <Card>
         <CardHeader>
-          <CardTitle>সকল সদস্যের বিস্তারিত তালিকা</CardTitle>
+          <CardTitle>সকল সদস্যের সম্পর্ক সহ বিস্তারিত তালিকা</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">নাম (বাংলা)</th>
-                  <th className="text-left p-2">নাম (ইংরেজি)</th>
-                  <th className="text-left p-2">জন্ম তারিখ</th>
-                  <th className="text-left p-2">লিঙ্গ</th>
-                  <th className="text-left p-2">মোবাইল</th>
-                  <th className="text-left p-2">পেশা</th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map(member => (
-                  <tr key={member.id} className="border-b">
-                    <td className="p-2">{member.name_bangla}</td>
-                    <td className="p-2">{member.name_english || '-'}</td>
-                    <td className="p-2">
-                      {member.birth_date ? new Date(member.birth_date).toLocaleDateString('bn-BD') : '-'}
-                    </td>
-                    <td className="p-2">
-                      {member.gender === 'male' ? 'পুরুষ' : member.gender === 'female' ? 'মহিলা' : 'অন্যান্য'}
-                    </td>
-                    <td className="p-2">{member.mobile || '-'}</td>
-                    <td className="p-2">{member.profession || '-'}</td>
-                  </tr>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>নাম (বাংলা)</TableHead>
+                  <TableHead>নাম (ইংরেজি)</TableHead>
+                  <TableHead>জন্ম তারিখ</TableHead>
+                  <TableHead>লিঙ্গ</TableHead>
+                  <TableHead>পিতা</TableHead>
+                  <TableHead>মাতা</TableHead>
+                  <TableHead>মোবাইল</TableHead>
+                  <TableHead>পেশা</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {familyRelationships.map((relationship) => (
+                  <TableRow key={relationship.member.id}>
+                    <TableCell className="font-medium">
+                      {relationship.member.name_bangla}
+                    </TableCell>
+                    <TableCell>
+                      {relationship.member.name_english || '-'}
+                    </TableCell>
+                    <TableCell>
+                      {relationship.member.birth_date ? 
+                        new Date(relationship.member.birth_date).toLocaleDateString('bn-BD') : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {relationship.member.gender === 'male' ? 'পুরুষ' : 
+                       relationship.member.gender === 'female' ? 'মহিলা' : 'অন্যান্য'}
+                    </TableCell>
+                    <TableCell>
+                      {relationship.father ? relationship.father.name_bangla : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {relationship.mother ? relationship.mother.name_bangla : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {relationship.member.mobile || '-'}
+                    </TableCell>
+                    <TableCell>
+                      {relationship.member.profession || '-'}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
