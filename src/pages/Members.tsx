@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Search, Edit, Trash2, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface FamilyMember {
   id: string;
@@ -21,6 +23,8 @@ const Members = () => {
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchMembers();
@@ -39,6 +43,32 @@ const Members = () => {
       console.error('Error fetching members:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (memberId: string, memberName: string) => {
+    try {
+      const { error } = await supabase
+        .from('family_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      toast({
+        title: "সফল",
+        description: `${memberName} সফলভাবে মুছে ফেলা হয়েছে`
+      });
+
+      // Refresh the members list
+      fetchMembers();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      toast({
+        title: "ত্রুটি",
+        description: "সদস্য মুছে ফেলতে সমস্যা হয়েছে",
+        variant: "destructive"
+      });
     }
   };
 
@@ -116,12 +146,37 @@ const Members = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/edit-member/${member.id}`)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>নিশ্চিত করুন</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                আপনি কি নিশ্চিত যে "{member.name_bangla}" সদস্যকে মুছে ফেলতে চান? এই কাজটি পূর্বাবস্থায় ফেরত নেওয়া যাবে না।
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDelete(member.id, member.name_bangla)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                মুছে ফেলুন
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </CardContent>

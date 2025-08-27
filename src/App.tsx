@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Members from "./pages/Members";
 import AddMember from "./pages/AddMember";
 import Reports from "./pages/Reports";
+import EditMember from "./pages/EditMember";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,13 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <AddMember />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/edit-member/:id" element={
+              <ProtectedRoute>
+                <Layout>
+                  <EditMember />
                 </Layout>
               </ProtectedRoute>
             } />
